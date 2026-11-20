@@ -211,12 +211,16 @@ const REVEAL_OPTIONS = { threshold: 0, rootMargin: "0px 0px 120px 0px" };
 function Reveal({ children, as: Tag = "div", className = "", delay = 0, direction, ...rest }) {
   const ref = useRef(null);
   const inView = useInView(ref, REVEAL_OPTIONS);
+  // Once the entrance transition has played, drop the stagger delay so hover /
+  // press animations on cards respond instantly instead of lagging by `delay` ms.
+  const [settled, setSettled] = useState(false);
   const dirClass = direction === "left" ? " reveal-left" : direction === "right" ? " reveal-right" : "";
   return (
     <Tag
       ref={ref}
       className={`reveal${dirClass}${inView ? " in-view" : ""}${className ? ` ${className}` : ""}`}
-      style={{ transitionDelay: `${delay}ms` }}
+      style={{ transitionDelay: settled ? "0ms" : `${delay}ms` }}
+      onTransitionEnd={(e) => { if (inView && e.target === e.currentTarget) setSettled(true); }}
       {...rest}
     >
       {children}
